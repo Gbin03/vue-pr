@@ -76,7 +76,60 @@ export function createASTElement(
     attrsMap: makeAttrsMap(attrs),
     rawAttrsMap: {},
     parent,
-    children: []
+    children: [],
+    // avoid xss: initialize the attributes which are prosible to be attacked
+    start: undefined,
+    end: undefined,
+    processed: undefined,
+    static: undefined,
+    staticRoot: undefined,
+    staticInFor: undefined,
+    staticProcessed: undefined,
+    hasBindings: undefined,
+    text: undefined,
+    attrs: undefined,
+    dynamicAttrs: undefined,
+    props: undefined,
+    plain: undefined,
+    pre: undefined,
+    ns: undefined,
+    component: undefined,
+    inlineTemplate: undefined,
+    transitionMode: undefined,
+    slotName: undefined,
+    slotTarget: undefined,
+    slotTargetDynamic: undefined,
+    slotScope: undefined,
+    scopedSlots: undefined,
+    ref: undefined,
+    refInFor: undefined,
+    if: undefined,
+    ifProcessed: undefined,
+    elseif: undefined,
+    else: undefined,
+    ifConditions: undefined,
+    for: undefined,
+    forProcessed: undefined,
+    key: undefined,
+    alias: undefined,
+    iterator1: undefined,
+    iterator2: undefined,
+    staticClass: undefined,
+    classBinding: undefined,
+    staticStyle: undefined,
+    styleBinding: undefined,
+    events: undefined,
+    nativeEvents: undefined,
+    transition: undefined,
+    transitionOnAppear: undefined,
+    model: undefined,
+    directives: undefined,
+    forbidden: undefined,
+    once: undefined,
+    onceProcessed: undefined,
+    wrapData: undefined,
+    wrapListeners: undefined,
+    ssrOptimizability: undefined
   }
 }
 
@@ -138,8 +191,8 @@ export function parse(template: string, options: CompilerOptions): ASTElement {
       } else if (__DEV__) {
         warnOnce(
           `Component template should contain exactly one root element. ` +
-            `If you are using v-if on multiple elements, ` +
-            `use v-else-if to chain them instead.`,
+          `If you are using v-if on multiple elements, ` +
+          `use v-else-if to chain them instead.`,
           { start: element.start }
         )
       }
@@ -153,9 +206,9 @@ export function parse(template: string, options: CompilerOptions): ASTElement {
           // keep it in the children list so that v-else(-if) conditions can
           // find it as the prev node.
           const name = element.slotTarget || '"default"'
-          ;(currentParent.scopedSlots || (currentParent.scopedSlots = {}))[
-            name
-          ] = element
+            ; (currentParent.scopedSlots || (currentParent.scopedSlots = {}))[
+              name
+            ] = element
         }
         currentParent.children.push(element)
         element.parent = currentParent
@@ -199,14 +252,14 @@ export function parse(template: string, options: CompilerOptions): ASTElement {
     if (el.tag === 'slot' || el.tag === 'template') {
       warnOnce(
         `Cannot use <${el.tag}> as component root element because it may ` +
-          'contain multiple nodes.',
+        'contain multiple nodes.',
         { start: el.start }
       )
     }
     if (el.attrsMap.hasOwnProperty('v-for')) {
       warnOnce(
         'Cannot use v-for on stateful component root element because ' +
-          'it renders multiple elements.',
+        'it renders multiple elements.',
         el.rawAttrsMap['v-for']
       )
     }
@@ -251,12 +304,12 @@ export function parse(template: string, options: CompilerOptions): ASTElement {
           if (invalidAttributeRE.test(attr.name)) {
             warn(
               `Invalid dynamic argument expression: attribute names cannot contain ` +
-                `spaces, quotes, <, >, / or =.`,
+              `spaces, quotes, <, >, / or =.`,
               options.outputSourceRange
                 ? {
-                    start: attr.start! + attr.name.indexOf(`[`),
-                    end: attr.start! + attr.name.length
-                  }
+                  start: attr.start! + attr.name.indexOf(`[`),
+                  end: attr.start! + attr.name.length
+                }
                 : undefined
             )
           }
@@ -268,9 +321,9 @@ export function parse(template: string, options: CompilerOptions): ASTElement {
         __DEV__ &&
           warn(
             'Templates should only be responsible for mapping the state to the ' +
-              'UI. Avoid placing tags with side-effects in your templates, such as ' +
-              `<${tag}>` +
-              ', as they will not be parsed.',
+            'UI. Avoid placing tags with side-effects in your templates, such as ' +
+            `<${tag}>` +
+            ', as they will not be parsed.',
             { start: element.start }
           )
       }
@@ -488,7 +541,7 @@ function processKey(el) {
         ) {
           warn(
             `Do not use v-for index as key on <transition-group> children, ` +
-              `this is the same as not using keys.`,
+            `this is the same as not using keys.`,
             getRawBindingAttr(el, 'key'),
             true /* tip */
           )
@@ -574,7 +627,7 @@ function processIfConditions(el, parent) {
   } else if (__DEV__) {
     warn(
       `v-${el.elseif ? 'else-if="' + el.elseif + '"' : 'else'} ` +
-        `used on element <${el.tag}> without corresponding v-if.`,
+      `used on element <${el.tag}> without corresponding v-if.`,
       el.rawAttrsMap[el.elseif ? 'v-else-if' : 'v-else']
     )
   }
@@ -589,7 +642,7 @@ function findPrevElement(children: Array<any>): ASTElement | void {
       if (__DEV__ && children[i].text !== ' ') {
         warn(
           `text "${children[i].text.trim()}" between v-if and v-else(-if) ` +
-            `will be ignored.`,
+          `will be ignored.`,
           children[i]
         )
       }
@@ -622,9 +675,9 @@ function processSlotContent(el) {
     if (__DEV__ && slotScope) {
       warn(
         `the "scope" attribute for scoped slots have been deprecated and ` +
-          `replaced by "slot-scope" since 2.5. The new "slot-scope" attribute ` +
-          `can also be used on plain elements in addition to <template> to ` +
-          `denote scoped slots.`,
+        `replaced by "slot-scope" since 2.5. The new "slot-scope" attribute ` +
+        `can also be used on plain elements in addition to <template> to ` +
+        `denote scoped slots.`,
         el.rawAttrsMap['scope'],
         true
       )
@@ -635,8 +688,8 @@ function processSlotContent(el) {
     if (__DEV__ && el.attrsMap['v-for']) {
       warn(
         `Ambiguous combined usage of slot-scope and v-for on <${el.tag}> ` +
-          `(v-for takes higher priority). Use a wrapper <template> for the ` +
-          `scoped slot to make it clearer.`,
+        `(v-for takes higher priority). Use a wrapper <template> for the ` +
+        `scoped slot to make it clearer.`,
         el.rawAttrsMap['slot-scope'],
         true
       )
@@ -671,7 +724,7 @@ function processSlotContent(el) {
           if (el.parent && !maybeComponent(el.parent)) {
             warn(
               `<template v-slot> can only appear at the root level inside ` +
-                `the receiving component`,
+              `the receiving component`,
               el
             )
           }
@@ -698,7 +751,7 @@ function processSlotContent(el) {
           if (el.scopedSlots) {
             warn(
               `To avoid scope ambiguity, the default slot should also use ` +
-                `<template> syntax when there are other named slots.`,
+              `<template> syntax when there are other named slots.`,
               slotBinding
             )
           }
@@ -740,9 +793,9 @@ function getSlotName(binding) {
   }
   return dynamicArgRE.test(name)
     ? // dynamic [name]
-      { name: name.slice(1, -1), dynamic: true }
+    { name: name.slice(1, -1), dynamic: true }
     : // static name
-      { name: `"${name}"`, dynamic: false }
+    { name: `"${name}"`, dynamic: false }
 }
 
 // handle <slot/> outlets
@@ -752,8 +805,8 @@ function processSlotOutlet(el) {
     if (__DEV__ && el.key) {
       warn(
         `\`key\` does not work on <slot> because slots are abstract outlets ` +
-          `and can possibly expand into multiple elements. ` +
-          `Use the key on a wrapping element instead.`,
+        `and can possibly expand into multiple elements. ` +
+        `Use the key on a wrapping element instead.`,
         getRawBindingAttr(el, 'key')
       )
     }
@@ -783,7 +836,7 @@ function processAttrs(el) {
       modifiers = parseModifiers(name.replace(dirRE, ''))
       // support .foo shorthand syntax for the .prop modifier
       if (process.env.VBIND_PROP_SHORTHAND && propBindRE.test(name)) {
-        ;(modifiers || (modifiers = {})).prop = true
+        ; (modifiers || (modifiers = {})).prop = true
         name = `.` + name.slice(1).replace(modifierRE, '')
       } else if (modifiers) {
         name = name.replace(modifierRE, '')
@@ -898,9 +951,9 @@ function processAttrs(el) {
         if (res) {
           warn(
             `${name}="${value}": ` +
-              'Interpolation inside attributes has been removed. ' +
-              'Use v-bind or the colon shorthand instead. For example, ' +
-              'instead of <div id="{{ val }}">, use <div :id="val">.',
+            'Interpolation inside attributes has been removed. ' +
+            'Use v-bind or the colon shorthand instead. For example, ' +
+            'instead of <div id="{{ val }}">, use <div :id="val">.',
             list[i]
           )
         }
@@ -987,10 +1040,10 @@ function checkForAliasModel(el, value) {
     if (_el.for && _el.alias === value) {
       warn(
         `<${el.tag} v-model="${value}">: ` +
-          `You are binding v-model directly to a v-for iteration alias. ` +
-          `This will not be able to modify the v-for source array because ` +
-          `writing to the alias is like modifying a function local variable. ` +
-          `Consider using an array of objects and use v-model on an object property instead.`,
+        `You are binding v-model directly to a v-for iteration alias. ` +
+        `This will not be able to modify the v-for source array because ` +
+        `writing to the alias is like modifying a function local variable. ` +
+        `Consider using an array of objects and use v-model on an object property instead.`,
         el.rawAttrsMap['v-model']
       )
     }
